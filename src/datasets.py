@@ -1,9 +1,12 @@
 import pyarrow.parquet as pq
 import pandas as pd
-
+import multiprocessing as mp
 from torch.utils.data import Dataset
 
 from src import config
+
+
+N_WORKERS = mp.cpu_count()
 
 
 def get_samples(metadata_path, signal_path, folds_path, folds):
@@ -40,15 +43,20 @@ class PowerDataset(Dataset):
                  signal_path=config.TRAIN_PARQUET_PATH,
                  folds_path=config.TRAIN_FOLDS_PATH,
                  transform=None,
+                 preproc_signal_transform=None,
                  signal_transform=None,
                  target_transform=None):
         super().__init__()
         self.folds = folds
         self.transform = transform
+        self.preproc_signal_transform = preproc_signal_transform
         self.signal_transform = signal_transform
         self.target_transform = target_transform
-        self.signals_lst, self.targets_lst, self.id_measurement_lst = \
+        signals_lst, self.targets_lst, self.id_measurement_lst = \
             get_samples(metadata_path, signal_path, folds_path, folds)
+
+        with mp.Pool(N_WORKERS) as pool:
+            self.signals_lst = pool.map(self.preproc_signal_transform, signals_lst)
 
     def __len__(self):
         return len(self.id_measurement_lst)

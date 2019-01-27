@@ -31,7 +31,7 @@ RUN conda install -c conda-forge opencv \
     scikit-learn 
 
 RUN pip install \
-    pytorch-argus==0.0.7 \
+    pytorch-argus==0.0.8 \
     cnn-finetune==0.5.1 
 
 RUN apt-get update &&\

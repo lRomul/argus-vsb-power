@@ -10,3 +10,4 @@ TRAIN_FOLDS_PATH = join(DATA_DIR, 'train_folds.csv')
 EXPERIMENTS_DIR = join(DATA_DIR, 'experiments')
 
 N_FOLDS = 5
+FOLDS = list(range(N_FOLDS))
