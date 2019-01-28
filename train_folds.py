@@ -45,16 +45,17 @@ def train_fold(save_dir, train_folds, val_folds):
     model = PowerMetaModel(PARAMS)
 
     callbacks = [
-        MonitorCheckpoint(save_dir, monitor='val_loss', max_saves=3, copy_last=False),
-        EarlyStopping(monitor='val_loss', patience=50),
-        ReduceLROnPlateau(monitor='val_loss', patience=10, factor=0.64, min_lr=1e-8),
+        MonitorCheckpoint(save_dir, monitor='val_mcc', max_saves=3, copy_last=False),
+        EarlyStopping(monitor='val_mcc', patience=100),
+        ReduceLROnPlateau(monitor='val_mcc', patience=30, factor=0.64, min_lr=1e-8),
         LoggingToFile(os.path.join(save_dir, 'log.txt')),
     ]
 
     model.fit(train_loader,
               val_loader=val_loader,
               max_epochs=500,
-              callbacks=callbacks)
+              callbacks=callbacks,
+              metrics=['mcc'])
 
 
 if __name__ == "__main__":

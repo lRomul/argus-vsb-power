@@ -1,5 +1,6 @@
 from argus import Model
 
+from src.metrics import MatthewsCorrelation
 from src.nn_modules import SimpleLSTM
 
 
