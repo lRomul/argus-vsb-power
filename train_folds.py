@@ -21,7 +21,7 @@ FOLDS = config.FOLDS
 PARAMS = {
     'nn_module': ('SimpleLSTM', {
         'seq_len': SEQ_LEN,
-        'input_size': 39
+        'input_size': 19 * 3
     }),
     'loss': 'BCELoss',
     'optimizer': ('Adam', {'lr': 0.001}),

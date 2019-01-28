@@ -28,17 +28,13 @@ def transform_ts(ts, n_dim=160, min_num=-128, max_num=127,
         std = ts_range.std()
         std_top = mean + std
         std_bot = mean - std
-        percentil_calc = np.percentile(ts_range, [0, 1, 25, 50, 75, 99, 100])
+        percentil_calc = np.percentile(ts_range,
+                                       [0, 1, 25, 50, 75, 99, 100])
         max_range = percentil_calc[-1] - percentil_calc[0]
-        covar = std / mean
-        asymmetry = mean - percentil_calc[4]
-        new_ts.append(np.concatenate([np.asarray([mean,
-                                                  std_top,
-                                                  std_bot,
-                                                  max_range,
-                                                  covar,
-                                                  asymmetry]),
-                                      percentil_calc]))
+        relative_percentile = percentil_calc - mean
+        new_ts.append(np.concatenate(
+            [np.asarray([mean, std, std_top, std_bot, max_range]),
+             percentil_calc, relative_percentile]))
     return np.asarray(new_ts)
 
 
