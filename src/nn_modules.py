@@ -45,18 +45,18 @@ class Attention(nn.Module):
 
 
 class SimpleLSTM(nn.Module):
-    def __init__(self, seq_len, input_size):
+    def __init__(self, seq_len, input_size, p_dropout=0.2, base_size=64):
         super().__init__()
 
-        self.lstm1 = nn.LSTM(input_size, 128, bidirectional=True, batch_first=True)
-        self.lstm2 = nn.LSTM(256, 64, bidirectional=True, batch_first=True)
+        self.lstm1 = nn.LSTM(input_size, base_size*2, bidirectional=True, batch_first=True)
+        self.lstm2 = nn.LSTM(base_size*4, base_size, bidirectional=True, batch_first=True)
 
-        self.attention = Attention(128, seq_len)
+        self.attention = Attention(base_size*2, seq_len)
 
-        self.fc1 = nn.Linear(128, 64)
+        self.fc1 = nn.Linear(base_size*2, base_size)
         self.relu = nn.ReLU()
-        self.dropout = nn.Dropout(0.2)
-        self.fc2 = nn.Linear(64, 3)
+        self.dropout = nn.Dropout(p_dropout)
+        self.fc2 = nn.Linear(base_size, 3)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
