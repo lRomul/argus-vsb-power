@@ -19,7 +19,7 @@ EXPERIMENT_NAME = 'random_search_simple_lstm_001'
 VAL_FOLDS = [0]
 TRAIN_FOLDS = [1, 2, 3, 4]
 SAVE_DIR = f'/workdir/data/experiments/{EXPERIMENT_NAME}'
-START_FROM = 10
+START_FROM = 0
 
 
 if __name__ == "__main__":
@@ -32,7 +32,7 @@ if __name__ == "__main__":
             'seq_len': int(np.random.choice([160, 320, 640])),
             'batch_size': int(np.random.choice([32, 64, 128, 256])),
             'base_size': int(np.random.choice([16, 32, 64, 128])),
-            'lr': float(np.random.uniform(0.01, 0.00001)),
+            'lr': float(np.random.choice([0.003, 0.001, 0.0003, 0.0001, 0.00003])),
             'patience': int(np.random.randint(10, 70)),
             'factor': float(np.random.uniform(0.3, 0.9)),
         }
