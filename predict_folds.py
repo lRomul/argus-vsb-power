@@ -3,6 +3,7 @@ from os.path import join
 import re
 import pandas as pd
 import pyarrow.parquet as pq
+import multiprocessing as mp
 import torch
 
 from argus import load_model
@@ -14,14 +15,25 @@ from src import config
 
 
 EXPERIMENT_NAME = 'simple_lstm_001'
-PRED_BATCH_SIZE = 64
+PRED_BATCH_SIZE = 512
 SEQ_LEN = 320
 FOLDS_DIR = f'/workdir/data/experiments/{EXPERIMENT_NAME}'
 PREDICTION_DIR = f'/workdir/data/predictions/{EXPERIMENT_NAME}'
 FOLDS = config.FOLDS
 make_dir(PREDICTION_DIR)
-
 THRESHOLD = 0.5
+
+N_WORKERS = mp.cpu_count()
+
+
+TRANSFORM = KaggleSignalTransform(n_dim=SEQ_LEN)
+TO_TENSOR = ToTensor()
+
+
+def use_transforms(signal):
+    signal = TRANSFORM(signal)
+    tensor = TO_TENSOR(signal)
+    return tensor
 
 
 class Predictor:
@@ -29,15 +41,9 @@ class Predictor:
         self.model = load_model(model_path)
         self.model.nn_module.eval()
 
-        self.transform = KaggleSignalTransform(n_dim=SEQ_LEN)
-        self.to_tensor = ToTensor()
-
     def __call__(self, signals):
-        tensors = []
-        for signal in signals:
-            signal = self.transform(signal)
-            tensor = self.to_tensor(signal)
-            tensors.append(tensor)
+        with mp.Pool(N_WORKERS) as pool:
+            tensors = pool.map(use_transforms, signals)
 
         tensor = torch.stack(tensors, dim=0)
         tensor = tensor.to(self.model.device)
