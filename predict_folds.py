@@ -92,6 +92,35 @@ def pred_val_fold(model_path, fold, train_signal):
     probs_df.to_csv(join(fold_prediction_dir, 'probs.csv'), index=False)
 
 
+def pred_test_fold(model_path, fold, test_signal):
+    metadata_df = pd.read_csv(config.METADATA_TEST_PATH)
+    predictor = Predictor(model_path)
+
+    signal_id_lst = []
+    probs_lst = []
+
+    signals = []
+    for id_measurement, group in metadata_df.groupby('id_measurement'):
+        signal_ids = group['signal_id'].tolist()
+
+        signal_id_lst += signal_ids
+        signals.append(test_signal[[si - 8712 for si in signal_ids]].copy())
+
+        if len(signals) == PRED_BATCH_SIZE:
+            probs = predictor(signals).tolist()
+            probs_lst += probs
+            signals = []
+
+    if signals:
+        probs = predictor(signals).tolist()
+        probs_lst += probs
+
+    probs_df = pd.DataFrame({'signal_id': signal_id_lst, 'target': probs_lst})
+    fold_prediction_dir = join(PREDICTION_DIR, f'fold_{fold}', 'test')
+    make_dir(fold_prediction_dir)
+    probs_df.to_csv(join(fold_prediction_dir, 'probs.csv'), index=False)
+
+
 def get_best_model_path(dir_path):
     model_scores = []
     for model_name in os.listdir(dir_path):
@@ -119,3 +148,5 @@ if __name__ == "__main__":
         print("Model path", best_model_path)
         print("Val predict")
         pred_val_fold(best_model_path, FOLDS[i], train_signal)
+        print("Test predict")
+        pred_test_fold(best_model_path, FOLDS[i], test_signal)
