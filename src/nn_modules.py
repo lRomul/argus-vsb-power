@@ -56,7 +56,7 @@ class SimpleLSTM(nn.Module):
         self.fc1 = nn.Linear(base_size*2, base_size)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(p_dropout)
-        self.fc2 = nn.Linear(base_size, 3)
+        self.fc2 = nn.Linear(base_size, 1)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):

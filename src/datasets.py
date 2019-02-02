@@ -1,4 +1,5 @@
 import pyarrow.parquet as pq
+import torch
 import pandas as pd
 import multiprocessing as mp
 from torch.utils.data import Dataset
@@ -21,20 +22,15 @@ def get_samples(metadata_path, signal_path, folds_path, folds):
 
     signals_lst = []
     targets_lst = []
-    id_measurement_lst = []
 
-    for id_measurement, group in metadata_df.groupby('id_measurement'):
-        if id_measurement2fold[id_measurement] not in folds:
+    for _, row in metadata_df.iterrows():
+        if id_measurement2fold[row.id_measurement] not in folds:
             continue
 
-        targets = group['target'].tolist()
-        signal_ids = group['signal_id'].tolist()
+        signals_lst.append(signal_array[row.signal_id])
+        targets_lst.append(row.target)
 
-        signals_lst.append(signal_array[signal_ids])
-        targets_lst.append(targets)
-        id_measurement_lst.append(id_measurement)
-
-    return signals_lst, targets_lst, id_measurement_lst
+    return signals_lst, targets_lst
 
 
 class PowerDataset(Dataset):
@@ -52,18 +48,18 @@ class PowerDataset(Dataset):
         self.preproc_signal_transform = preproc_signal_transform
         self.signal_transform = signal_transform
         self.target_transform = target_transform
-        signals_lst, self.targets_lst, self.id_measurement_lst = \
+        signals_lst, self.targets_lst = \
             get_samples(metadata_path, signal_path, folds_path, folds)
 
         with mp.Pool(N_WORKERS) as pool:
             self.signals_lst = pool.map(self.preproc_signal_transform, signals_lst)
 
     def __len__(self):
-        return len(self.id_measurement_lst)
+        return len(self.signals_lst)
 
     def __getitem__(self, idx):
-        signal = self.signals_lst[idx]
-        target = self.targets_lst[idx]
+        signal = self.signals_lst[idx].copy()
+        target = [self.targets_lst[idx], ]
 
         if self.transform is not None:
             signal, target = self.transform(signal, target)

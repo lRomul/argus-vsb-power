@@ -13,7 +13,7 @@ from src.argus_models import PowerMetaModel
 from src import config
 
 
-EXPERIMENT_NAME = 'simple_lstm_001'
+EXPERIMENT_NAME = 'single_lstm_001'
 BATCH_SIZE = 64
 SEQ_LEN = 320
 SAVE_DIR = f'/workdir/data/experiments/{EXPERIMENT_NAME}'
@@ -21,8 +21,8 @@ FOLDS = config.FOLDS
 PARAMS = {
     'nn_module': ('SimpleLSTM', {
         'seq_len': SEQ_LEN,
-        'input_size': 19 * 3,
-        'p_dropout': 0.27522566980133767,
+        'input_size': 19,
+        'p_dropout': 0.3,
         'base_size': 64
     }),
     'loss': 'BCELoss',
@@ -49,7 +49,7 @@ def train_fold(save_dir, train_folds, val_folds):
     callbacks = [
         MonitorCheckpoint(save_dir, monitor='val_mcc', max_saves=3, copy_last=False),
         EarlyStopping(monitor='val_mcc', patience=100),
-        ReduceLROnPlateau(monitor='val_mcc', patience=56, factor=0.8754803312932844, min_lr=1e-8),
+        ReduceLROnPlateau(monitor='val_mcc', patience=40, factor=0.8, min_lr=1e-8),
         LoggingToFile(os.path.join(save_dir, 'log.txt')),
     ]
 

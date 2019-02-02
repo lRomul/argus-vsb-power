@@ -48,15 +48,12 @@ class KaggleSignalTransform:
         self.range_needed = range_needed
 
     def __call__(self, signal):
-        signal_lst = []
-        for phase in [0, 1, 2]:
-            phase_signal = transform_ts(signal[phase],
-                                        n_dim=self.n_dim,
-                                        min_num=self.min_num,
-                                        max_num=self.max_num,
-                                        range_needed=self.range_needed)
-            signal_lst.append(phase_signal)
-        return np.concatenate(signal_lst, axis=1)
+        signal = transform_ts(signal,
+                              n_dim=self.n_dim,
+                              min_num=self.min_num,
+                              max_num=self.max_num,
+                              range_needed=self.range_needed)
+        return signal
 
 
 class ToTensor:

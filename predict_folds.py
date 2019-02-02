@@ -14,7 +14,7 @@ from src.utils import make_dir
 from src import config
 
 
-EXPERIMENT_NAME = 'simple_lstm_001'
+EXPERIMENT_NAME = 'single_lstm_001'
 PRED_BATCH_SIZE = 512
 SEQ_LEN = 320
 FOLDS_DIR = f'/workdir/data/experiments/{EXPERIMENT_NAME}'
@@ -68,23 +68,21 @@ def pred_val_fold(model_path, fold, train_signal):
     probs_lst = []
 
     signals = []
-    for id_measurement, group in metadata_df.groupby('id_measurement'):
-        if id_measurement2fold[id_measurement] not in [fold]:
+    for _, row in metadata_df.iterrows():
+        if id_measurement2fold[row.id_measurement] not in [fold]:
             continue
 
-        signal_ids = group['signal_id'].tolist()
-
-        signal_id_lst += signal_ids
-        signals.append(train_signal[signal_ids].copy())
+        signal_id_lst.append(row.signal_id)
+        signals.append(train_signal[row.signal_id].copy())
 
         if len(signals) == PRED_BATCH_SIZE:
-            probs = predictor(signals).tolist()
-            probs_lst += probs
+            probs = predictor(signals)
+            probs_lst += probs.tolist()
             signals = []
 
     if signals:
-        probs = predictor(signals).tolist()
-        probs_lst += probs
+        probs = predictor(signals)
+        probs_lst += probs.tolist()
 
     probs_df = pd.DataFrame({'signal_id': signal_id_lst, 'target': probs_lst})
     fold_prediction_dir = join(PREDICTION_DIR, f'fold_{fold}', 'val')
@@ -100,20 +98,18 @@ def pred_test_fold(model_path, fold, test_signal):
     probs_lst = []
 
     signals = []
-    for id_measurement, group in metadata_df.groupby('id_measurement'):
-        signal_ids = group['signal_id'].tolist()
-
-        signal_id_lst += signal_ids
-        signals.append(test_signal[[si - 8712 for si in signal_ids]].copy())
+    for _, row in metadata_df.iterrows():
+        signal_id_lst.append(row.signal_id)
+        signals.append(test_signal[row.signal_id - 8712].copy())
 
         if len(signals) == PRED_BATCH_SIZE:
-            probs = predictor(signals).tolist()
-            probs_lst += probs
+            probs = predictor(signals)
+            probs_lst += probs.tolist()
             signals = []
 
     if signals:
-        probs = predictor(signals).tolist()
-        probs_lst += probs
+        probs = predictor(signals)
+        probs_lst += probs.tolist()
 
     probs_df = pd.DataFrame({'signal_id': signal_id_lst, 'target': probs_lst})
     fold_prediction_dir = join(PREDICTION_DIR, f'fold_{fold}', 'test')
