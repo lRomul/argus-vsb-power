@@ -48,11 +48,12 @@ class PowerDataset(Dataset):
         self.preproc_signal_transform = preproc_signal_transform
         self.signal_transform = signal_transform
         self.target_transform = target_transform
-        signals_lst, self.targets_lst = \
+        self.signals_lst, self.targets_lst = \
             get_samples(metadata_path, signal_path, folds_path, folds)
 
-        with mp.Pool(N_WORKERS) as pool:
-            self.signals_lst = pool.map(self.preproc_signal_transform, signals_lst)
+        if self.preproc_signal_transform is not None:
+            with mp.Pool(N_WORKERS) as pool:
+                self.signals_lst = pool.map(self.preproc_signal_transform, self.signals_lst)
 
     def __len__(self):
         return len(self.signals_lst)

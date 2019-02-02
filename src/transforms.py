@@ -60,3 +60,9 @@ class ToTensor:
     def __call__(self, x):
         x = torch.from_numpy(np.asarray(x, np.float32))
         return x
+
+
+class RawSignalScale:
+    def __call__(self, signal):
+        signal = signal.astype(np.float32) / 128
+        return signal.reshape((1, -1))
