@@ -8,15 +8,14 @@ import torch
 
 from argus import load_model
 
-from src.transforms import KaggleSignalTransform, ToTensor
+from src.transforms import RawSignalScale, ToTensor
 from src.argus_models import PowerMetaModel
 from src.utils import make_dir
 from src import config
 
 
-EXPERIMENT_NAME = 'single_lstm_001'
-PRED_BATCH_SIZE = 512
-SEQ_LEN = 320
+EXPERIMENT_NAME = 'conv_attention_001'
+PRED_BATCH_SIZE = 128
 FOLDS_DIR = f'/workdir/data/experiments/{EXPERIMENT_NAME}'
 PREDICTION_DIR = f'/workdir/data/predictions/{EXPERIMENT_NAME}'
 FOLDS = config.FOLDS
@@ -26,7 +25,7 @@ THRESHOLD = 0.5
 N_WORKERS = mp.cpu_count()
 
 
-TRANSFORM = KaggleSignalTransform(n_dim=SEQ_LEN)
+TRANSFORM = RawSignalScale()
 TO_TENSOR = ToTensor()
 
 
@@ -40,10 +39,10 @@ class Predictor:
     def __init__(self, model_path):
         self.model = load_model(model_path)
         self.model.nn_module.eval()
+        self.pool = mp.Pool(N_WORKERS)
 
     def __call__(self, signals):
-        with mp.Pool(N_WORKERS) as pool:
-            tensors = pool.map(use_transforms, signals)
+        tensors = self.pool.map(use_transforms, signals)
 
         tensor = torch.stack(tensors, dim=0)
         tensor = tensor.to(self.model.device)
