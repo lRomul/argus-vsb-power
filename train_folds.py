@@ -16,12 +16,12 @@ from src import config
 torch.backends.cudnn.benchmark = True
 
 
-EXPERIMENT_NAME = 'conv_lstm_001'
+EXPERIMENT_NAME = 'conv_attention_001'
 BATCH_SIZE = 32
 SAVE_DIR = f'/workdir/data/experiments/{EXPERIMENT_NAME}'
 FOLDS = config.FOLDS
 PARAMS = {
-    'nn_module': ('Conv1dLSTM', {
+    'nn_module': ('Conv1dAttention', {
         'seq_len': 195,
         'input_size': 1,
         'p_dropout': 0.3,

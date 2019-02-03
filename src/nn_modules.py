@@ -105,17 +105,14 @@ class Conv1dFeatureExtractor(nn.Module):
         return x
 
 
-class Conv1dLSTM(nn.Module):
+class Conv1dAttention(nn.Module):
     def __init__(self, seq_len, input_size, p_dropout=0.2, base_size=64):
         super().__init__()
 
         self.conv = Conv1dFeatureExtractor(input_size, base_size//4, p_dropout)
-        self.lstm1 = nn.LSTM(base_size, base_size*2, bidirectional=True, batch_first=True)
-        self.lstm2 = nn.LSTM(base_size*4, base_size, bidirectional=True, batch_first=True)
+        self.attention = Attention(base_size, seq_len)
 
-        self.attention = Attention(base_size*2, seq_len)
-
-        self.fc1 = nn.Linear(base_size*2, base_size)
+        self.fc1 = nn.Linear(base_size, base_size)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(p_dropout)
         self.fc2 = nn.Linear(base_size, 1)
@@ -124,9 +121,6 @@ class Conv1dLSTM(nn.Module):
     def forward(self, x):
         x = self.conv(x)
         x = x.permute(0, 2, 1)
-
-        x, _ = self.lstm1(x)
-        x, _ = self.lstm2(x)
 
         x = self.attention(x)
 
