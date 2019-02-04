@@ -40,10 +40,10 @@ class Predictor:
     def __init__(self, model_path):
         self.model = load_model(model_path)
         self.model.nn_module.eval()
+        self.pool = mp.Pool(N_WORKERS)
 
     def __call__(self, signals):
-        with mp.Pool(N_WORKERS) as pool:
-            tensors = pool.map(use_transforms, signals)
+        tensors = self.pool.map(use_transforms, signals)
 
         tensor = torch.stack(tensors, dim=0)
         tensor = tensor.to(self.model.device)
@@ -52,6 +52,9 @@ class Predictor:
             probs = self.model.nn_module(tensor)
             probs = probs.cpu().numpy().flatten()
             return probs
+
+    def __del__(self):
+        self.pool.close()
 
 
 def pred_val_fold(model_path, fold, train_signal):
