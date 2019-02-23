@@ -52,7 +52,7 @@ class PowerDataset(Dataset):
         self.preproc_signal_transform = preproc_signal_transform
         self.signal_transform = signal_transform
         self.target_transform = target_transform
-        signals_lst, self.targets_lst, self.id_measurement_lst = \
+        self.signals_lst, self.targets_lst, self.id_measurement_lst = \
             get_samples(metadata_path, signal_path, folds_path, folds)
 
         if self.preproc_signal_transform is not None:

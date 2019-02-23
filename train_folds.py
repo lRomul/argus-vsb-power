@@ -8,36 +8,34 @@ from argus.callbacks import MonitorCheckpoint, \
 from torch.utils.data import DataLoader
 
 from src.datasets import PowerDataset
-from src.transforms import KaggleSignalTransform, ToTensor
+from src.transforms import ToTensor, RawSignalScale
 from src.argus_models import PowerMetaModel
 from src import config
 
 
-EXPERIMENT_NAME = 'simple_lstm_001'
-BATCH_SIZE = 64
-SEQ_LEN = 320
+EXPERIMENT_NAME = 'conv_test_001'
+BATCH_SIZE = 16
 SAVE_DIR = f'/workdir/data/experiments/{EXPERIMENT_NAME}'
 FOLDS = config.FOLDS
 PARAMS = {
-    'nn_module': ('SimpleLSTM', {
-        'seq_len': SEQ_LEN,
-        'input_size': 19 * 3,
-        'p_dropout': 0.27522566980133767,
+    'nn_module': ('Conv1dAvgPool', {
+        'input_size': 3,
+        'p_dropout': 0.0,
         'base_size': 64
     }),
     'loss': 'BCELoss',
-    'optimizer': ('Adam', {'lr': 0.0003}),
+    'optimizer': ('Adam', {'lr': 0.001}),
     'device': 'cuda'
 }
 
 
 def train_fold(save_dir, train_folds, val_folds):
     train_dataset = PowerDataset(train_folds,
-                                 preproc_signal_transform=KaggleSignalTransform(n_dim=SEQ_LEN),
+                                 preproc_signal_transform=RawSignalScale(),
                                  signal_transform=ToTensor(),
                                  target_transform=ToTensor())
     val_dataset = PowerDataset(val_folds,
-                               preproc_signal_transform=KaggleSignalTransform(n_dim=SEQ_LEN),
+                               preproc_signal_transform=RawSignalScale(),
                                signal_transform=ToTensor(),
                                target_transform=ToTensor())
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True,
@@ -49,7 +47,7 @@ def train_fold(save_dir, train_folds, val_folds):
     callbacks = [
         MonitorCheckpoint(save_dir, monitor='val_mcc', max_saves=3, copy_last=False),
         EarlyStopping(monitor='val_mcc', patience=100),
-        ReduceLROnPlateau(monitor='val_mcc', patience=56, factor=0.8754803312932844, min_lr=1e-8),
+        ReduceLROnPlateau(monitor='val_mcc', patience=30, factor=0.64, min_lr=1e-8),
         LoggingToFile(os.path.join(save_dir, 'log.txt')),
     ]
 

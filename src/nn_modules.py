@@ -71,3 +71,90 @@ class SimpleLSTM(nn.Module):
         x = self.fc2(x)
         x = self.sigmoid(x)
         return x
+
+
+class BasicConv1d(nn.Module):
+    def __init__(self, in_planes, out_planes, kernel_size,
+                 stride=1, padding=0, dilation=1):
+        super().__init__()
+        self.conv = nn.Conv1d(
+            in_planes, out_planes,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            bias=False,
+            dilation=dilation)
+        self.bn = nn.BatchNorm1d(out_planes)
+        self.relu = nn.ReLU(inplace=True)
+
+    def forward(self, x):
+        x = self.conv(x)
+        x = self.bn(x)
+        x = self.relu(x)
+        return x
+
+
+class Conv1dFeatureExtractor(nn.Module):
+    def __init__(self, input_size=1, base_size=64, p_dropout=0.1):
+        super().__init__()
+        self.channels = input_size
+        self.s = base_size
+        self.dropout = p_dropout
+        self.input_conv = BasicConv1d(input_size, base_size//4, 1)
+        self.conv_1 = BasicConv1d(base_size//4, base_size*1, 4, stride=2)
+        self.conv_2 = BasicConv1d(base_size*1, base_size*1, 4, stride=2)
+        self.conv_3 = BasicConv1d(base_size*1, base_size*2, 4, stride=2)
+        self.conv_4 = BasicConv1d(base_size*2, base_size*2, 4, stride=2)
+        self.conv_5 = BasicConv1d(base_size*2, base_size*4, 4, stride=2)
+        self.conv_6 = BasicConv1d(base_size*4, base_size*4, 4, stride=2)
+        self.pool = nn.MaxPool1d(2)
+        self.dropout = nn.Dropout(p=p_dropout)
+
+    def forward(self, x):
+        x = self.input_conv(x)
+
+        x = self.conv_1(x)
+        x = self.pool(x)
+        x = self.conv_2(x)
+        x = self.pool(x)
+        x = self.dropout(x)
+
+        x = self.conv_3(x)
+        x = self.pool(x)
+        x = self.conv_4(x)
+        x = self.pool(x)
+        x = self.dropout(x)
+
+        x = self.conv_5(x)
+        x = self.pool(x)
+        x = self.conv_6(x)
+        x = self.pool(x)
+        x = self.dropout(x)
+
+        return x
+
+
+class Conv1dAvgPool(nn.Module):
+    def __init__(self, input_size, p_dropout=0.1, base_size=64):
+        super().__init__()
+
+        self.conv = Conv1dFeatureExtractor(input_size, base_size//4, p_dropout)
+
+        self.fc1 = nn.Linear(base_size, base_size)
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(p_dropout)
+        self.fc2 = nn.Linear(base_size, 3)
+        self.sigmoid = nn.Sigmoid()
+        self.avgpool = nn.AdaptiveAvgPool1d(1)
+
+    def forward(self, x):
+        x = self.conv(x)
+        x = self.avgpool(x)
+        x = x.view(x.shape[0], -1)
+
+        x = self.fc1(x)
+        x = self.relu(x)
+        x = self.dropout(x)
+        x = self.fc2(x)
+        x = self.sigmoid(x)
+        return x
