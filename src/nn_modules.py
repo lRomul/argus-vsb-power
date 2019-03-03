@@ -135,14 +135,15 @@ class Conv1dFeatureExtractor(nn.Module):
 
 
 class Conv1dAvgPool(nn.Module):
-    def __init__(self, input_size, p_dropout=0.1, base_size=64):
+    def __init__(self, input_size, base_size=64,
+                 conv_dropout=0.1, fc_dropout=0.1):
         super().__init__()
 
-        self.conv = Conv1dFeatureExtractor(input_size, base_size//4, p_dropout)
+        self.conv = Conv1dFeatureExtractor(input_size, base_size//4, conv_dropout)
 
         self.fc1 = nn.Linear(base_size, base_size)
         self.relu = nn.ReLU()
-        self.dropout = nn.Dropout(p_dropout)
+        self.dropout = nn.Dropout(fc_dropout)
         self.fc2 = nn.Linear(base_size, 3)
         self.sigmoid = nn.Sigmoid()
         self.avgpool = nn.AdaptiveAvgPool1d(1)
@@ -151,6 +152,38 @@ class Conv1dAvgPool(nn.Module):
         x = self.conv(x)
         x = self.avgpool(x)
         x = x.view(x.shape[0], -1)
+
+        x = self.fc1(x)
+        x = self.relu(x)
+        x = self.dropout(x)
+        x = self.fc2(x)
+        x = self.sigmoid(x)
+        return x
+
+
+class Conv1dLSTMAtt(nn.Module):
+    def __init__(self, input_size, base_size=64, seq_len=194,
+                 conv_dropout=0.1, fc_dropout=0.1):
+        super().__init__()
+
+        self.conv = Conv1dFeatureExtractor(input_size, base_size//4, conv_dropout)
+
+        self.lstm = nn.LSTM(base_size, base_size, num_layers=2,
+                             bidirectional=True, batch_first=True)
+        self.attention = Attention(base_size*2, seq_len)
+
+        self.fc1 = nn.Linear(base_size*2, base_size)
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(fc_dropout)
+        self.fc2 = nn.Linear(base_size, 3)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        x = self.conv(x)
+        x = x.permute(0, 2, 1)
+
+        x, _ = self.lstm(x)
+        x = self.attention(x)
 
         x = self.fc1(x)
         x = self.relu(x)
