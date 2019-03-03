@@ -39,6 +39,9 @@ RUN apt-get update &&\
     pip install parquet==1.2 \
     pyarrow==0.12.0
 
+RUN git clone https://github.com/NVIDIA/apex &&\
+    cd apex && python setup.py install
+
 ENV PYTHONPATH $PYTHONPATH:/workdir
 ENV TORCH_HOME=/workdir/data/.torch
 

@@ -1,6 +1,7 @@
 import os
 import json
 import pyarrow.parquet as pq
+import torch
 
 from argus.callbacks import MonitorCheckpoint, \
     EarlyStopping, LoggingToFile, ReduceLROnPlateau
@@ -12,9 +13,11 @@ from src.transforms import ToTensor, RawSignalScale
 from src.argus_models import PowerMetaModel
 from src import config
 
+# torch.backends.cudnn.benchmark = True
 
-EXPERIMENT_NAME = 'conv_test_014'
-BATCH_SIZE = 32
+
+EXPERIMENT_NAME = 'conv_test_020'
+BATCH_SIZE = 128
 SAVE_DIR = f'/workdir/data/experiments/{EXPERIMENT_NAME}'
 FOLDS = config.FOLDS
 PARAMS = {
@@ -22,7 +25,7 @@ PARAMS = {
         'input_size': 3,
         'conv_dropout': 0.2,
         'fc_dropout': 0.2,
-        'base_size': 64,
+        'base_size': 32,
         'seq_len': 194
     }),
     'loss': 'BCELoss',
