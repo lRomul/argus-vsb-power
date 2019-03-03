@@ -13,8 +13,8 @@ from src.argus_models import PowerMetaModel
 from src import config
 
 
-EXPERIMENT_NAME = 'conv_test_014'
-BATCH_SIZE = 32
+EXPERIMENT_NAME = 'conv_test_026'
+BATCH_SIZE = 16
 SAVE_DIR = f'/workdir/data/experiments/{EXPERIMENT_NAME}'
 FOLDS = config.FOLDS
 PARAMS = {
@@ -22,7 +22,7 @@ PARAMS = {
         'input_size': 3,
         'conv_dropout': 0.2,
         'fc_dropout': 0.2,
-        'base_size': 64,
+        'base_size': 128,
         'seq_len': 194
     }),
     'loss': 'BCELoss',
