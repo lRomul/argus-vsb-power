@@ -13,17 +13,16 @@ from src.argus_models import PowerMetaModel
 from src import config
 
 
-EXPERIMENT_NAME = 'conv_test_026'
+EXPERIMENT_NAME = 'conv_test_029'
 BATCH_SIZE = 16
 SAVE_DIR = f'/workdir/data/experiments/{EXPERIMENT_NAME}'
 FOLDS = config.FOLDS
 PARAMS = {
-    'nn_module': ('Conv1dLSTMAtt', {
+    'nn_module': ('Conv1dAttPN', {
         'input_size': 3,
         'conv_dropout': 0.2,
         'fc_dropout': 0.2,
         'base_size': 128,
-        'seq_len': 194
     }),
     'loss': 'BCELoss',
     'optimizer': ('Adam', {'lr': 0.001}),
