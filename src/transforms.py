@@ -1,4 +1,5 @@
 import torch
+import random
 import numpy as np
 
 
@@ -69,3 +70,58 @@ class RawSignalScale:
     def __call__(self, signal):
         signal = signal.astype(np.float32) / 128
         return signal.reshape((3, -1))
+
+
+class Compose:
+    def __init__(self, transforms):
+        self.transforms = transforms
+
+    def __call__(self, signal, target=None):
+        if target is None:
+            for trns in self.transforms:
+                signal = trns(signal)
+            return signal
+        else:
+            for trns in self.transforms:
+                signal, target = trns(signal, target)
+            return signal, target
+
+
+class RandomCrop:
+    def __init__(self, size):
+        self.size = size
+
+    def __call__(self, signal):
+        start = random.randint(0, signal.shape[1] - self.size)
+        return signal[:, start: start + self.size]
+
+
+class CenterCrop:
+    def __init__(self, size):
+        self.size = size
+
+    def __call__(self, signal):
+        start = (signal.shape[1] - self.size) // 2
+        return signal[:, start: start + self.size]
+
+
+def train_transforms(seq_len):
+    trns_dict = dict()
+    trns_dict['preproc_signal_transform'] = RawSignalScale()
+    trns_dict['signal_transform'] = Compose([
+        RandomCrop(seq_len),
+        ToTensor(),
+    ])
+    trns_dict['target_transform'] = ToTensor()
+    return trns_dict
+
+
+def test_transforms(seq_len):
+    trns_dict = dict()
+    trns_dict['preproc_signal_transform'] = RawSignalScale()
+    trns_dict['signal_transform'] = Compose([
+        CenterCrop(seq_len),
+        ToTensor(),
+    ])
+    trns_dict['target_transform'] = ToTensor()
+    return trns_dict
