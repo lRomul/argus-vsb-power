@@ -63,7 +63,7 @@ class PowerDataset(Dataset):
         return len(self.id_measurement_lst)
 
     def __getitem__(self, idx):
-        signal = self.signals_lst[idx]
+        signal = self.signals_lst[idx].copy()
         target = self.targets_lst[idx]
 
         if self.transform is not None:
