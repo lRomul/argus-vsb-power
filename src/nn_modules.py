@@ -101,90 +101,61 @@ class Conv1dFeatureExtractor(nn.Module):
         self.s = base_size
         self.dropout = p_dropout
         self.input_conv = BasicConv1d(input_size, base_size//4, 1)
-        self.conv_1 = BasicConv1d(base_size//4, base_size*1, 4, stride=2)
-        self.conv_2 = BasicConv1d(base_size*1, base_size*1, 4, stride=2)
-        self.conv_3 = BasicConv1d(base_size*1, base_size*2, 4, stride=2)
-        self.conv_4 = BasicConv1d(base_size*2, base_size*2, 4, stride=2)
-        self.conv_5 = BasicConv1d(base_size*2, base_size*4, 4, stride=2)
-        self.conv_6 = BasicConv1d(base_size*4, base_size*4, 4, stride=2)
-        self.pool = nn.MaxPool1d(2)
+        self.conv_1 = BasicConv1d(base_size//4, base_size*1, 4, stride=2, padding=1)
+        self.conv_2 = BasicConv1d(base_size*1, base_size*1, 4, stride=2, padding=1)
+        self.conv_3 = BasicConv1d(base_size*1, base_size*2, 4, stride=2, padding=1)
+        self.conv_4 = BasicConv1d(base_size*2, base_size*2, 4, stride=2, padding=1)
+
+        self.conv_5 = BasicConv1d(base_size*2, base_size*4, 4, stride=2, padding=1)
+        self.conv_6 = BasicConv1d(base_size*4, base_size*4, 4, stride=2, padding=1)
+        self.conv_7 = BasicConv1d(base_size*4, base_size*8, 4, stride=2, padding=1)
+        self.conv_8 = BasicConv1d(base_size*8, base_size*8, 4, stride=2, padding=1)
+
         self.dropout = nn.Dropout(p=p_dropout)
 
     def forward(self, x):
         x = self.input_conv(x)
 
         x = self.conv_1(x)
-        x = self.pool(x)
         x = self.conv_2(x)
-        x = self.pool(x)
-        x = self.dropout(x)
-
         x = self.conv_3(x)
-        x = self.pool(x)
         x = self.conv_4(x)
-        x = self.pool(x)
         x = self.dropout(x)
-
+        # print(x.shape)
         x = self.conv_5(x)
-        x = self.pool(x)
         x = self.conv_6(x)
-        x = self.pool(x)
+        x = self.conv_7(x)
+        x = self.conv_8(x)
         x = self.dropout(x)
-
-        return x
-
-
-class Conv1dAvgPool(nn.Module):
-    def __init__(self, input_size, base_size=64,
-                 conv_dropout=0.1, fc_dropout=0.1):
-        super().__init__()
-
-        self.conv = Conv1dFeatureExtractor(input_size, base_size//4, conv_dropout)
-
-        self.fc1 = nn.Linear(base_size, base_size)
-        self.relu = nn.ReLU()
-        self.dropout = nn.Dropout(fc_dropout)
-        self.fc2 = nn.Linear(base_size, 3)
-        self.sigmoid = nn.Sigmoid()
-        self.avgpool = nn.AdaptiveAvgPool1d(1)
-
-    def forward(self, x):
-        x = self.conv(x)
-        x = self.avgpool(x)
-        x = x.view(x.shape[0], -1)
-
-        x = self.fc1(x)
-        x = self.relu(x)
-        x = self.dropout(x)
-        x = self.fc2(x)
-        x = self.sigmoid(x)
+        # print(x.shape)
         return x
 
 
 class Conv1dLSTMAtt(nn.Module):
-    def __init__(self, input_size, base_size=64, seq_len=194,
+    def __init__(self, input_size, seq_len, base_size=64,
                  conv_dropout=0.1, fc_dropout=0.1):
         super().__init__()
 
         self.conv = Conv1dFeatureExtractor(input_size, base_size//4, conv_dropout)
 
-        self.lstm = nn.LSTM(base_size, base_size, num_layers=2,
-                             bidirectional=True, batch_first=True)
-        self.attention = Attention(base_size*2, seq_len)
+        self.lstm = nn.LSTM(base_size*2, base_size*2, num_layers=2,
+                            bidirectional=True, batch_first=True)
+        self.attention = Attention(base_size*4, seq_len // 2**8)
 
-        self.fc1 = nn.Linear(base_size*2, base_size)
+        self.fc1 = nn.Linear(base_size*4, base_size*2)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(fc_dropout)
-        self.fc2 = nn.Linear(base_size, 3)
+        self.fc2 = nn.Linear(base_size*2, 3)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         x = self.conv(x)
         x = x.permute(0, 2, 1)
-
+        # print(x.shape)
         x, _ = self.lstm(x)
+        # print(x.shape)
         x = self.attention(x)
-
+        # print(x.shape)
         x = self.fc1(x)
         x = self.relu(x)
         x = self.dropout(x)

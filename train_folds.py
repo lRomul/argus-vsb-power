@@ -2,7 +2,7 @@ import os
 import json
 import pyarrow.parquet as pq
 
-from argus.callbacks import MonitorCheckpoint, \
+from argus.callbacks import Checkpoint, \
     EarlyStopping, LoggingToFile, ReduceLROnPlateau
 
 from torch.utils.data import DataLoader
@@ -13,7 +13,7 @@ from src.argus_models import PowerMetaModel
 from src import config
 
 
-EXPERIMENT_NAME = 'conv_test_026'
+EXPERIMENT_NAME = 'conv_test_034'
 BATCH_SIZE = 16
 SAVE_DIR = f'/workdir/data/experiments/{EXPERIMENT_NAME}'
 FOLDS = config.FOLDS
@@ -23,7 +23,7 @@ PARAMS = {
         'conv_dropout': 0.2,
         'fc_dropout': 0.2,
         'base_size': 128,
-        'seq_len': 194
+        'seq_len': 800000
     }),
     'loss': 'BCELoss',
     'optimizer': ('Adam', {'lr': 0.001}),
@@ -47,7 +47,7 @@ def train_fold(save_dir, train_folds, val_folds):
     model = PowerMetaModel(PARAMS)
 
     callbacks = [
-        MonitorCheckpoint(save_dir, monitor='val_mcc', max_saves=3, copy_last=False),
+        Checkpoint(save_dir, period=1),
         EarlyStopping(monitor='val_mcc', patience=50),
         ReduceLROnPlateau(monitor='val_mcc', patience=15, factor=0.64, min_lr=1e-8),
         LoggingToFile(os.path.join(save_dir, 'log.txt')),
