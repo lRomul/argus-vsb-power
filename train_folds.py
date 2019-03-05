@@ -13,7 +13,7 @@ from src.argus_models import PowerMetaModel
 from src import config
 
 
-EXPERIMENT_NAME = 'conv_lstm_att_004'
+EXPERIMENT_NAME = 'conv_lstm_att_006'
 BATCH_SIZE = 32
 SEQ_LEN = 524288
 SAVE_DIR = f'/workdir/data/experiments/{EXPERIMENT_NAME}'
@@ -22,7 +22,7 @@ PARAMS = {
     'nn_module': ('Conv1dLSTMAtt', {
         'input_size': 3,
         'conv_dropout': 0.0,
-        'fc_dropout': 0.2,
+        'fc_dropout': 0.1,
         'base_size': 128,
         'seq_len': SEQ_LEN
     }),
@@ -42,7 +42,7 @@ def train_fold(save_dir, train_folds, val_folds):
     model = PowerMetaModel(PARAMS)
 
     callbacks = [
-        Checkpoint(save_dir, period=1),
+        Checkpoint(save_dir, period=1, file_format='model-{epoch:03d}-{val_mcc:.6f}.pth'),
         ReduceLROnPlateau(monitor='val_mcc', patience=20, factor=0.64, min_lr=1e-8),
         LoggingToFile(os.path.join(save_dir, 'log.txt')),
     ]
