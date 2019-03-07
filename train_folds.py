@@ -22,7 +22,7 @@ PARAMS = {
     'nn_module': ('Conv1dAttention', {
         'input_size': 3,
         'conv_dropout': 0.0,
-        'fc_dropout': 0.1,
+        'fc_dropout': 0.0,
         'base_size': 128,
         'seq_len': SEQ_LEN
     }),
