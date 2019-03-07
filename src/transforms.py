@@ -105,6 +105,57 @@ class CenterCrop:
         return signal[:, start: start + self.size]
 
 
+class LeftCenterCrop:
+    def __init__(self, size):
+        self.size = size
+
+    def __call__(self, signal):
+        start = (signal.shape[1] - self.size) // 4
+        return signal[:, start: start + self.size]
+
+
+class RightCenterCrop:
+    def __init__(self, size):
+        self.size = size
+
+    def __call__(self, signal):
+        start = ((signal.shape[1] - self.size) // 4) * 3
+        return signal[:, start: start + self.size]
+
+
+class LeftCrop:
+    def __init__(self, size):
+        self.size = size
+
+    def __call__(self, signal):
+        return signal[:, :self.size]
+
+
+class RightCrop:
+    def __init__(self, size):
+        self.size = size
+
+    def __call__(self, signal):
+        return signal[:, -self.size:]
+
+
+class Crops:
+    def __init__(self, size):
+        self.left = LeftCrop(size)
+        self.left_center = LeftCenterCrop(size)
+        self.center = CenterCrop(size)
+        self.right_center = RightCenterCrop(size)
+        self.right = RightCrop(size)
+
+    def __call__(self, signal):
+        left = self.left(signal)
+        left_center = self.left_center(signal)
+        center = self.center(signal)
+        right_center = self.right_center(signal)
+        right = self.right(signal)
+        return left, left_center, center, right_center, right
+
+
 def train_transforms(seq_len):
     trns_dict = dict()
     trns_dict['preproc_signal_transform'] = RawSignalScale()
